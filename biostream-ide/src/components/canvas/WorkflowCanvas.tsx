@@ -63,7 +63,7 @@ const CustomControls: React.FC = () => {
   }, [getZoom])
 
   return (
-    <div className="fixed z-50 top-6 left-6 flex flex-row items-center gap-1 bg-white/80 rounded-full shadow p-1 border border-slate-200 backdrop-blur-sm">
+    <div className="fixed z-50 bottom-6 right-6 flex flex-row items-center gap-1 bg-white/80 rounded-full shadow p-1 border border-slate-200 backdrop-blur-sm">
       <Button
         variant="ghost"
         size="icon"
