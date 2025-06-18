@@ -4,6 +4,10 @@ import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from '@reactflow/core'
 import { cn } from '@/lib/utils'
 import { NodeData } from '@/types/workflow'
+import { useDispatch } from 'react-redux'
+import { removeNode } from '@/store/workflowSlice'
+import { AppDispatch } from '@/store'
+import { Trash2 } from 'lucide-react'
 
 interface BaseNodeProps extends NodeProps<NodeData> {
   children?: React.ReactNode
@@ -30,19 +34,40 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
   data, 
   selected, 
   children,
-  className 
+  className,
+  id
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (confirm(`Are you sure you want to delete "${data.label}"?`)) {
+      dispatch(removeNode(id))
+    }
+  }
 
   return (
     <div
       className={cn(
-        'bg-white border-2 rounded-lg shadow-md min-w-[200px]',
+        'bg-white border-2 rounded-lg shadow-md min-w-[200px] relative group',
         selected ? 'border-blue-500' : 'border-gray-300',
         statusColors[data.status],
         className
       )}
     >
+      {/* Delete Button - Only visible on hover or when selected */}
+      <button
+        onClick={handleDelete}
+        className={cn(
+          'absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10',
+          selected && 'opacity-100'
+        )}
+        title="Delete node"
+      >
+        <Trash2 size={12} />
+      </button>
+
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div className="flex items-center gap-2">

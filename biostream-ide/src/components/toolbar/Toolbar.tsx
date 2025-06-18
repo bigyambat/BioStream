@@ -3,13 +3,15 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '@/store'
-import { setIsExecuting, undo, redo, saveToHistory } from '@/store/workflowSlice'
-import { Play, Square, RotateCcw, RotateCw, Save, FolderOpen, Download, Upload } from 'lucide-react'
+import { setIsExecuting, undo, redo, saveToHistory, removeNode, removeEdge, setSelectedNodes, setSelectedEdges } from '@/store/workflowSlice'
+import { Play, Square, RotateCcw, RotateCw, Save, FolderOpen, Download, Upload, Trash2, MousePointer } from 'lucide-react'
 
 export const Toolbar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const isExecuting = useSelector((state: RootState) => state.workflow.isExecuting)
   const project = useSelector((state: RootState) => state.workflow.project)
+  const selectedNodes = useSelector((state: RootState) => state.workflow.selectedNodes)
+  const selectedEdges = useSelector((state: RootState) => state.workflow.selectedEdges)
 
   const handleRunWorkflow = () => {
     dispatch(setIsExecuting(true))
@@ -22,6 +24,46 @@ export const Toolbar: React.FC = () => {
   const handleStopWorkflow = () => {
     dispatch(setIsExecuting(false))
     // TODO: Implement workflow stop
+  }
+
+  const handleDelete = () => {
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+      alert('No items selected to delete')
+      return
+    }
+
+    const totalItems = selectedNodes.length + selectedEdges.length
+    const confirmMessage = `Are you sure you want to delete ${totalItems} selected item${totalItems > 1 ? 's' : ''}?`
+    
+    if (confirm(confirmMessage)) {
+      // Delete selected nodes
+      selectedNodes.forEach(nodeId => {
+        dispatch(removeNode(nodeId))
+      })
+      
+      // Delete selected edges
+      selectedEdges.forEach(edgeId => {
+        dispatch(removeEdge(edgeId))
+      })
+      
+      // Clear selection
+      dispatch(setSelectedNodes([]))
+      dispatch(setSelectedEdges([]))
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (project) {
+      const allNodeIds = project.nodes.map(node => node.id)
+      const allEdgeIds = project.edges.map(edge => edge.id)
+      dispatch(setSelectedNodes(allNodeIds))
+      dispatch(setSelectedEdges(allEdgeIds))
+    }
+  }
+
+  const handleClearSelection = () => {
+    dispatch(setSelectedNodes([]))
+    dispatch(setSelectedEdges([]))
   }
 
   const handleUndo = () => {
@@ -91,6 +133,11 @@ export const Toolbar: React.FC = () => {
             {project.nodes.length} nodes, {project.edges.length} connections
           </span>
         )}
+        {(selectedNodes.length > 0 || selectedEdges.length > 0) && (
+          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            {selectedNodes.length} nodes, {selectedEdges.length} edges selected
+          </span>
+        )}
       </div>
 
       {/* Center Section - Execution Controls */}
@@ -116,55 +163,87 @@ export const Toolbar: React.FC = () => {
 
       {/* Right Section - Project Actions */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={handleUndo}
-          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-          title="Undo"
-        >
-          <RotateCcw size={16} />
-        </button>
+        {/* Selection Controls */}
+        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
+          <button
+            onClick={handleSelectAll}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+            title="Select All (Ctrl+A)"
+          >
+            <MousePointer size={16} />
+          </button>
+          
+          <button
+            onClick={handleClearSelection}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+            title="Clear Selection (Esc)"
+          >
+            <MousePointer size={16} />
+          </button>
+          
+          <button
+            onClick={handleDelete}
+            disabled={selectedNodes.length === 0 && selectedEdges.length === 0}
+            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Delete Selected (Delete)"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        {/* History Controls */}
+        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
+          <button
+            onClick={handleUndo}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+            title="Undo (Ctrl+Z)"
+          >
+            <RotateCcw size={16} />
+          </button>
+          
+          <button
+            onClick={handleRedo}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+            title="Redo (Ctrl+Y)"
+          >
+            <RotateCw size={16} />
+          </button>
+        </div>
         
-        <button
-          onClick={handleRedo}
-          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-          title="Redo"
-        >
-          <RotateCw size={16} />
-        </button>
-        
-        <div className="w-px h-6 bg-gray-300 mx-2" />
-        
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          <Save size={16} />
-          Save
-        </button>
-        
-        <button
-          onClick={handleOpen}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-        >
-          <FolderOpen size={16} />
-          Open
-        </button>
-        
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-        >
-          <Download size={16} />
-          Export
-        </button>
-        
-        <button
-          onClick={handleImport}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-        >
-          <Upload size={16} />
-          Import
-        </button>
+        {/* Project Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            <Save size={16} />
+            Save
+          </button>
+          
+          <button
+            onClick={handleOpen}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            <FolderOpen size={16} />
+            Open
+          </button>
+          
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            <Download size={16} />
+            Export
+          </button>
+          
+          <button
+            onClick={handleImport}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            <Upload size={16} />
+            Import
+          </button>
+        </div>
       </div>
     </div>
   )
