@@ -28,47 +28,6 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
 }) => {
   const { setNodes } = useReactFlow()
 
-  const getStatusIcon = () => {
-    switch (data.status) {
-      case 'completed':
-        return <CheckCircle size={16} className="text-green-600" />
-      case 'running':
-        return <Clock size={16} className="text-blue-600 animate-spin" />
-      case 'failed':
-        return <XCircle size={16} className="text-red-600" />
-      case 'pending':
-        return <AlertCircle size={16} className="text-yellow-600" />
-      default:
-        return <AlertCircle size={16} className="text-gray-400" />
-    }
-  }
-
-  const getStatusColor = () => {
-    switch (data.status) {
-      case 'completed':
-        return 'bg-green-50 border-green-200 text-green-800'
-      case 'running':
-        return 'bg-blue-50 border-blue-200 text-blue-800'
-      case 'failed':
-        return 'bg-red-50 border-red-200 text-red-800'
-      case 'pending':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-800'
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-800'
-    }
-  }
-
-  const getExecutionTargetColor = () => {
-    switch (data.executionTarget) {
-      case 'local':
-        return 'bg-slate-100 text-slate-700'
-      case 'hpc':
-        return 'bg-purple-100 text-purple-700'
-      default:
-        return 'bg-gray-100 text-gray-700'
-    }
-  }
-
   // Handler to update node width/height in React Flow state
   const handleResize = (_event: unknown, { width, height }: { width: number; height: number }) => {
     setNodes((nds) => nds.map((node) =>
@@ -77,10 +36,9 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
   }
 
   return (
-    <Card 
-      style={{ width: data.width, height: data.height }}
+    <Card
       className={`
-        max-w-[400px] shadow-lg border-2 transition-all duration-200
+        shadow-lg border-2 transition-all duration-200
         ${selected 
           ? 'border-blue-500 ring-2 ring-blue-300 shadow-blue-200/50' 
           : 'border-slate-200 hover:border-slate-300'
@@ -88,12 +46,15 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
         ${data.status === 'running' ? 'animate-pulse' : ''}
         ${className || ''}
       `}
+      style={{ boxSizing: 'border-box', padding: 0, margin: 0 }}
     >
       {/* Node Resizer (only visible when selected) */}
       <NodeResizer 
         isVisible={selected} 
         minWidth={180} 
         minHeight={100} 
+        maxWidth={400}
+        maxHeight={300}
         lineClassName="border-blue-200" 
         handleClassName="bg-blue-400 border-white w-2 h-2" 
         color="#3b82f6"
@@ -107,9 +68,8 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
         className="w-3 h-3 bg-slate-400 border-2 border-white"
         style={{ top: '50%', transform: 'translateY(-50%)' }}
       />
-
       {/* Node Header */}
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2" style={{ padding: '8px 12px 4px 12px' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">{data.icon || '📊'}</span>
@@ -117,38 +77,56 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
               {data.label}
             </CardTitle>
           </div>
-          
           {/* Status Badge */}
           <Badge 
             variant="outline" 
-            className={`text-xs px-2 py-1 ${getStatusColor()}`}
+            className={`text-xs px-2 py-1 ${(() => {
+              switch (data.status) {
+                case 'completed': return 'bg-green-50 border-green-200 text-green-800'
+                case 'running': return 'bg-blue-50 border-blue-200 text-blue-800'
+                case 'failed': return 'bg-red-50 border-red-200 text-red-800'
+                case 'pending': return 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                default: return 'bg-gray-50 border-gray-200 text-gray-800'
+              }
+            })()}`}
           >
             <div className="flex items-center gap-1">
-              {getStatusIcon()}
+              {(() => {
+                switch (data.status) {
+                  case 'completed': return <CheckCircle size={16} className="text-green-600" />
+                  case 'running': return <Clock size={16} className="text-blue-600 animate-spin" />
+                  case 'failed': return <XCircle size={16} className="text-red-600" />
+                  case 'pending': return <AlertCircle size={16} className="text-yellow-600" />
+                  default: return <AlertCircle size={16} className="text-gray-400" />
+                }
+              })()}
               <span className="capitalize">{data.status}</span>
             </div>
           </Badge>
         </div>
-
         {/* Execution Target */}
         <Badge 
           variant="secondary" 
-          className={`text-xs ${getExecutionTargetColor()}`}
+          className={`text-xs ${(() => {
+            switch (data.executionTarget) {
+              case 'local': return 'bg-slate-100 text-slate-700'
+              case 'hpc': return 'bg-purple-100 text-purple-700'
+              default: return 'bg-gray-100 text-gray-700'
+            }
+          })()}`}
         >
           {data.executionTarget === 'hpc' ? 'HPC (Slurm)' : 'Local'}
         </Badge>
       </CardHeader>
-
       {/* Node Content */}
-      <CardContent className="pt-0">
-        <div className="space-y-2">
+      <CardContent className="pt-0 w-full h-full" style={{ padding: '4px 12px 8px 12px', boxSizing: 'border-box' }}>
+        <div className="space-y-2 w-full h-full">
           {/* Description */}
           {data.description && (
             <p className="text-xs text-slate-600 line-clamp-2">
               {data.description}
             </p>
           )}
-
           {/* Parameters */}
           {data.params && Object.keys(data.params).length > 0 && (
             <div className="space-y-1">
@@ -163,10 +141,8 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
               </div>
             </div>
           )}
-
           {/* Custom Content */}
           {children}
-
           {/* Action Buttons */}
           <div className="flex items-center gap-1 pt-2">
             {onRun && (
@@ -181,7 +157,6 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
                 <Play size={12} />
               </Button>
             )}
-            
             {onEdit && (
               <Button
                 onClick={() => onEdit(data.id)}
@@ -193,7 +168,6 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
                 <Settings size={12} />
               </Button>
             )}
-            
             {onDelete && (
               <Button
                 onClick={() => onDelete(data.id)}
@@ -208,7 +182,6 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
           </div>
         </div>
       </CardContent>
-
       {/* Output Handle */}
       <Handle
         type="source"

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef, useState, useEffect } from 'react'
+import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react'
 import {
   ReactFlow,
   Node,
@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer } from 'lucide-react'
+import CustomEdge from '../edges/CustomEdge'
 
 // Generate ID utility function
 const generateId = (): string => {
@@ -43,6 +44,10 @@ const nodeTypes = {
   'transform': NodeFactory,
   'visualization': NodeFactory,
   'control': NodeFactory,
+}
+
+const edgeTypes = {
+  'custom-edge': CustomEdge,
 }
 
 // Custom Controls Component
@@ -164,6 +169,9 @@ export const WorkflowCanvas: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
+  // Memoize node list for edge creation
+  const nodeList = useMemo(() => nodes, [nodes])
+
   // Close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
@@ -235,7 +243,7 @@ export const WorkflowCanvas: React.FC = () => {
         target: params.target!,
         sourceHandle: params.sourceHandle || undefined,
         targetHandle: params.targetHandle || undefined,
-        type: 'data-flow' as const,
+        type: 'custom-edge' as const,
         data: {}
       }
       
@@ -293,10 +301,43 @@ export const WorkflowCanvas: React.FC = () => {
 
       setNodes((nds) => nds.concat(reactFlowNode))
       dispatch(addNode(newNode))
-      // Do NOT call fitView after drop, so node stays where dropped
+
+      // Automatic edge: connect from last selected node or last node to new node
+      let fromNodeId: string | undefined
+      if (selectedNodes.length > 0) {
+        fromNodeId = selectedNodes[selectedNodes.length - 1]
+      } else if (nodeList.length > 0) {
+        fromNodeId = nodeList[nodeList.length - 1].id
+      }
+      if (fromNodeId) {
+        const newEdge = {
+          id: generateId(),
+          source: fromNodeId,
+          target: newNode.id,
+          type: 'custom-edge' as const,
+          data: {},
+        }
+        setEdges((eds) => eds.concat(newEdge))
+        dispatch(addEdgeAction(newEdge))
+      }
     },
-    [reactFlowInstance, setNodes, dispatch]
+    [reactFlowInstance, setNodes, dispatch, selectedNodes, nodeList, setEdges]
   )
+
+  // Button to connect two selected nodes
+  const handleConnectSelected = () => {
+    if (selectedNodes.length === 2) {
+      const newEdge = {
+        id: generateId(),
+        source: selectedNodes[0],
+        target: selectedNodes[1],
+        type: 'custom-edge' as const,
+        data: {},
+      }
+      setEdges((eds) => eds.concat(newEdge))
+      dispatch(addEdgeAction(newEdge))
+    }
+  }
 
   const onNodesDelete: OnNodesDelete = useCallback(
     (deleted) => {
@@ -378,6 +419,19 @@ export const WorkflowCanvas: React.FC = () => {
 
   return (
     <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
+      {/* Connect Nodes Button */}
+      {selectedNodes.length === 2 && (
+        <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 flex justify-center">
+          <Button
+            onClick={handleConnectSelected}
+            variant="default"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow"
+          >
+            Connect Selected Nodes
+          </Button>
+        </div>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -396,6 +450,7 @@ export const WorkflowCanvas: React.FC = () => {
         onPaneContextMenu={onPaneContextMenu}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         attributionPosition="bottom-left"
         className="bg-gradient-to-br from-slate-50 to-slate-100"

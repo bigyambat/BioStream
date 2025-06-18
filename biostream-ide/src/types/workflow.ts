@@ -66,6 +66,7 @@ export type NodeType =
 export type EdgeType = 
   | 'data-flow'
   | 'control-flow'
+  | 'custom-edge'
 
 export type ExecutionTarget = 
   | 'local'
