@@ -15,9 +15,10 @@ import {
   NodeDragHandler,
   ReactFlowInstance,
   NodeMouseHandler,
-  EdgeMouseHandler
+  EdgeMouseHandler,
+  useReactFlow,
+  Panel
 } from '@reactflow/core'
-import { Controls } from '@reactflow/controls'
 import { Background } from '@reactflow/background'
 import { MiniMap } from '@reactflow/minimap'
 import { NodeFactory } from '../nodes/NodeFactory'
@@ -26,7 +27,15 @@ import { NodeTemplate, NodeData, EdgeData } from '@/types/workflow'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '@/store'
 import { addNode, addEdge as addEdgeAction, removeNode, removeEdge, setSelectedNodes, setSelectedEdges } from '@/store/workflowSlice'
-import { generateId } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer } from 'lucide-react'
+
+// Generate ID utility function
+const generateId = (): string => {
+  return Math.random().toString(36).substr(2, 9)
+}
 
 const nodeTypes = {
   'r-script': NodeFactory,
@@ -34,6 +43,86 @@ const nodeTypes = {
   'transform': NodeFactory,
   'visualization': NodeFactory,
   'control': NodeFactory,
+}
+
+// Custom Controls Component
+const CustomControls: React.FC = () => {
+  const { zoomIn, zoomOut, fitView, setViewport, getZoom } = useReactFlow()
+  const [zoom, setZoom] = React.useState(1)
+
+  React.useEffect(() => {
+    const updateZoom = () => setZoom(getZoom())
+    updateZoom()
+    const interval = setInterval(updateZoom, 100)
+    return () => clearInterval(interval)
+  }, [getZoom])
+
+  return (
+    <div className="fixed z-50 top-6 left-6 flex flex-row items-center gap-1 bg-white/80 rounded-full shadow p-1 border border-slate-200 backdrop-blur-sm">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => zoomIn()}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Zoom In"
+      >
+        <ZoomIn size={16} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => zoomOut()}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Zoom Out"
+      >
+        <ZoomOut size={16} />
+      </Button>
+      <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono bg-slate-100 border border-slate-200 text-slate-700">
+        {Math.round(zoom * 100)}%
+      </Badge>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => fitView()}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Fit View"
+      >
+        <Maximize2 size={16} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setViewport({ x: 0, y: 0, zoom: 1 })}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Reset View"
+      >
+        <RotateCcw size={16} />
+      </Button>
+    </div>
+  )
+}
+
+// Selection Info Panel
+const SelectionInfo: React.FC = () => {
+  const selectedNodes = useSelector((state: RootState) => state.workflow.selectedNodes)
+  const selectedEdges = useSelector((state: RootState) => state.workflow.selectedEdges)
+
+  if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+    return null
+  }
+
+  return (
+    <Panel position="top-right" className="mt-4 mr-4">
+      <Card className="px-3 py-2 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <MousePointer size={14} className="text-blue-600" />
+          <Badge variant="outline" className="text-xs">
+            {selectedNodes.length} nodes, {selectedEdges.length} edges
+          </Badge>
+        </div>
+      </Card>
+    </Panel>
+  )
 }
 
 export const WorkflowCanvas: React.FC = () => {
@@ -118,6 +207,20 @@ export const WorkflowCanvas: React.FC = () => {
         dispatch(setSelectedEdges([]))
         setContextMenu(null)
       }
+
+      // Zoom shortcuts
+      if ((event.ctrlKey || event.metaKey) && event.key === '=') {
+        event.preventDefault()
+        // Zoom in will be handled by React Flow
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === '-') {
+        event.preventDefault()
+        // Zoom out will be handled by React Flow
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === '0') {
+        event.preventDefault()
+        // Reset zoom will be handled by React Flow
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -153,13 +256,22 @@ export const WorkflowCanvas: React.FC = () => {
 
       if (!reactFlowWrapper.current || !reactFlowInstance) return
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect()
       const template: NodeTemplate = JSON.parse(event.dataTransfer.getData('application/reactflow'))
 
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      })
+      // Use screenToFlowPosition if available for accurate drop
+      let position
+      if (typeof reactFlowInstance.screenToFlowPosition === 'function') {
+        position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        })
+      } else {
+        const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect()
+        position = reactFlowInstance.project({
+          x: event.clientX - reactFlowBounds.left,
+          y: event.clientY - reactFlowBounds.top,
+        })
+      }
 
       const newNode = {
         id: generateId(),
@@ -168,7 +280,7 @@ export const WorkflowCanvas: React.FC = () => {
         position,
         status: 'pending' as const,
         code: template.defaultCode,
-        params: template.defaultParams,
+        params: template.defaultParams as Record<string, string | number | boolean>,
         executionTarget: 'local' as const,
       }
 
@@ -181,6 +293,7 @@ export const WorkflowCanvas: React.FC = () => {
 
       setNodes((nds) => nds.concat(reactFlowNode))
       dispatch(addNode(newNode))
+      // Do NOT call fitView after drop, so node stays where dropped
     },
     [reactFlowInstance, setNodes, dispatch]
   )
@@ -256,8 +369,15 @@ export const WorkflowCanvas: React.FC = () => {
     []
   )
 
+  // Add node click handler
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    event.stopPropagation()
+    dispatch(setSelectedNodes([node.id]))
+    dispatch(setSelectedEdges([]))
+  }, [dispatch])
+
   return (
-    <div className="flex-1 h-full" ref={reactFlowWrapper}>
+    <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -274,28 +394,58 @@ export const WorkflowCanvas: React.FC = () => {
         onNodeContextMenu={onNodeContextMenu}
         onEdgeContextMenu={onEdgeContextMenu}
         onPaneContextMenu={onPaneContextMenu}
+        onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
         fitView
         attributionPosition="bottom-left"
-        className="bg-gray-50"
+        className="bg-gradient-to-br from-slate-50 to-slate-100"
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Shift"
+        minZoom={0.1}
+        maxZoom={4}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        panOnScroll={true}
+        panOnDrag={true}
+        zoomOnDoubleClick={true}
+        preventScrolling={true}
+        nodesDraggable={true}
+        nodesConnectable={true}
+        elementsSelectable={true}
+        selectNodesOnDrag={true}
+        snapToGrid={false}
+        snapGrid={[15, 15]}
       >
-        <Controls />
-        <Background color="#aaa" gap={16} />
+        <Background 
+          color="#94a3b8" 
+          gap={20} 
+          size={1}
+          className="opacity-20"
+        />
         <MiniMap
           nodeColor={(node: Node) => {
             switch (node.data?.status) {
               case 'completed': return '#10b981'
               case 'running': return '#3b82f6'
               case 'failed': return '#ef4444'
-              default: return '#6b7280'
+              default: return '#64748b'
             }
           }}
-          nodeStrokeWidth={3}
+          nodeStrokeWidth={2}
           zoomable
           pannable
+          className="border border-slate-200 rounded-lg shadow-lg bg-white/80 backdrop-blur-sm"
+          style={{
+            width: 200,
+            height: 150,
+          }}
         />
+        
+        {/* Custom Controls */}
+        <CustomControls />
+        
+        {/* Selection Info */}
+        <SelectionInfo />
       </ReactFlow>
       
       {/* Context Menu */}

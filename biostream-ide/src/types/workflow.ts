@@ -5,17 +5,24 @@ export interface Position {
 
 export interface NodeData {
   id: string
-  type: NodeType
+  type: string
   label: string
-  position?: Position
+  position: { x: number; y: number }
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cached'
   code?: string
-  params?: Record<string, unknown>
-  executionTarget?: ExecutionTarget
-  status: ExecutionStatus
+  params?: Record<string, string | number | boolean>
+  executionTarget: 'local' | 'hpc'
   error?: string
   logs?: string[]
-  resources?: ResourceSpec
-  metadata?: Record<string, unknown>
+  icon?: string
+  description?: string
+  resources?: {
+    cpu?: number
+    memory?: number
+    time?: string
+  }
+  width?: number
+  height?: number
 }
 
 export interface EdgeData {

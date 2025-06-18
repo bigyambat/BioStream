@@ -5,6 +5,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState, AppDispatch } from '@/store'
 import { setIsExecuting, undo, redo, saveToHistory, removeNode, removeEdge, setSelectedNodes, setSelectedEdges } from '@/store/workflowSlice'
 import { Play, Square, RotateCcw, RotateCw, Save, FolderOpen, Download, Upload, Trash2, MousePointer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Card } from '@/components/ui/card'
 
 export const Toolbar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -122,129 +126,156 @@ export const Toolbar: React.FC = () => {
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-      {/* Left Section - Project Info */}
-      <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-gray-800">
-          {project?.name || 'Untitled Workflow'}
-        </h1>
-        {project && (
-          <span className="text-sm text-gray-500">
-            {project.nodes.length} nodes, {project.edges.length} connections
-          </span>
-        )}
-        {(selectedNodes.length > 0 || selectedEdges.length > 0) && (
-          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
-            {selectedNodes.length} nodes, {selectedEdges.length} edges selected
-          </span>
-        )}
-      </div>
-
-      {/* Center Section - Execution Controls */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleRunWorkflow}
-          disabled={isExecuting}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Play size={16} />
-          Run Workflow
-        </button>
-        
-        <button
-          onClick={handleStopWorkflow}
-          disabled={!isExecuting}
-          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Square size={16} />
-          Stop
-        </button>
-      </div>
-
-      {/* Right Section - Project Actions */}
-      <div className="flex items-center gap-2">
-        {/* Selection Controls */}
-        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <button
-            onClick={handleSelectAll}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-            title="Select All (Ctrl+A)"
-          >
-            <MousePointer size={16} />
-          </button>
-          
-          <button
-            onClick={handleClearSelection}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-            title="Clear Selection (Esc)"
-          >
-            <MousePointer size={16} />
-          </button>
-          
-          <button
-            onClick={handleDelete}
-            disabled={selectedNodes.length === 0 && selectedEdges.length === 0}
-            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Delete Selected (Delete)"
-          >
-            <Trash2 size={16} />
-          </button>
+    <Card className="border-0 rounded-none border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+      <div className="px-4 py-3 flex items-center justify-between">
+        {/* Left Section - Project Info */}
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">
+              {project?.name || 'Untitled Workflow'}
+            </h1>
+            {project && (
+              <p className="text-sm text-slate-500">
+                {project.nodes.length} nodes, {project.edges.length} connections
+              </p>
+            )}
+          </div>
+          {(selectedNodes.length > 0 || selectedEdges.length > 0) && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <MousePointer size={12} className="mr-1" />
+              {selectedNodes.length} nodes, {selectedEdges.length} edges selected
+            </Badge>
+          )}
         </div>
 
-        {/* History Controls */}
-        <div className="flex items-center gap-1 border-r border-gray-300 pr-2">
-          <button
-            onClick={handleUndo}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-            title="Undo (Ctrl+Z)"
-          >
-            <RotateCcw size={16} />
-          </button>
-          
-          <button
-            onClick={handleRedo}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-            title="Redo (Ctrl+Y)"
-          >
-            <RotateCw size={16} />
-          </button>
-        </div>
-        
-        {/* Project Controls */}
+        {/* Center Section - Execution Controls */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleSave}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          <Button
+            onClick={handleRunWorkflow}
+            disabled={isExecuting}
+            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
           >
-            <Save size={16} />
-            Save
-          </button>
+            <Play size={16} className="mr-2" />
+            Run Workflow
+          </Button>
           
-          <button
-            onClick={handleOpen}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          <Button
+            onClick={handleStopWorkflow}
+            disabled={!isExecuting}
+            variant="destructive"
+            size="sm"
+            className="disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FolderOpen size={16} />
-            Open
-          </button>
+            <Square size={16} className="mr-2" />
+            Stop
+          </Button>
+        </div>
+
+        {/* Right Section - Project Actions */}
+        <div className="flex items-center gap-2">
+          {/* Selection Controls */}
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={handleSelectAll}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Select All (Ctrl+A)"
+            >
+              <MousePointer size={16} />
+            </Button>
+            
+            <Button
+              onClick={handleClearSelection}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Clear Selection (Esc)"
+            >
+              <MousePointer size={16} />
+            </Button>
+            
+            <Button
+              onClick={handleDelete}
+              disabled={selectedNodes.length === 0 && selectedEdges.length === 0}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Delete Selected (Delete)"
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          {/* History Controls */}
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={handleUndo}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Undo (Ctrl+Z)"
+            >
+              <RotateCcw size={16} />
+            </Button>
+            
+            <Button
+              onClick={handleRedo}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Redo (Ctrl+Y)"
+            >
+              <RotateCw size={16} />
+            </Button>
+          </div>
           
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-          >
-            <Download size={16} />
-            Export
-          </button>
+          <Separator orientation="vertical" className="h-6" />
           
-          <button
-            onClick={handleImport}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-          >
-            <Upload size={16} />
-            Import
-          </button>
+          {/* Project Controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSave}
+              variant="default"
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Save size={16} className="mr-2" />
+              Save
+            </Button>
+            
+            <Button
+              onClick={handleOpen}
+              variant="outline"
+              size="sm"
+            >
+              <FolderOpen size={16} className="mr-2" />
+              Open
+            </Button>
+            
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              size="sm"
+            >
+              <Download size={16} className="mr-2" />
+              Export
+            </Button>
+            
+            <Button
+              onClick={handleImport}
+              variant="outline"
+              size="sm"
+            >
+              <Upload size={16} className="mr-2" />
+              Import
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 } 
