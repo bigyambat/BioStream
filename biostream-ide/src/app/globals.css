@@ -119,4 +119,29 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent scroll interference with canvas */
+  .react-flow__viewport {
+    pointer-events: auto !important;
+  }
+  
+  .react-flow__pane {
+    cursor: grab;
+  }
+  
+  .react-flow__pane:active {
+    cursor: grabbing;
+  }
+  
+  /* Ensure canvas container doesn't interfere with scroll */
+  .react-flow__container {
+    overflow: hidden !important;
+  }
+  
+  /* Allow React Flow components to handle their own events */
+  .react-flow__minimap,
+  .react-flow__controls,
+  .react-flow__panel {
+    pointer-events: auto !important;
+  }
 }

@@ -113,13 +113,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
   return (
     <div
-      className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+      className="fixed z-50 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px] pointer-events-none"
       style={{
         left: x,
         top: y,
       }}
     >
-      {menuItems}
+      {menuItems.map((item, index) => 
+        React.cloneElement(item, {
+          key: index,
+          className: `${item.props.className} pointer-events-auto`
+        })
+      )}
     </div>
   )
 } 

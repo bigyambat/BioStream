@@ -30,7 +30,7 @@ import { addNode, addEdge as addEdgeAction, removeNode, removeEdge, setSelectedN
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer } from 'lucide-react'
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer, X } from 'lucide-react'
 import CustomEdge from '../edges/CustomEdge'
 
 // Generate ID utility function
@@ -63,13 +63,13 @@ const CustomControls: React.FC = () => {
   }, [getZoom])
 
   return (
-    <div className="fixed z-50 bottom-6 right-6 flex flex-row items-center gap-1 bg-white/80 rounded-full shadow p-1 border border-slate-200 backdrop-blur-sm">
+    <div className="fixed z-50 bottom-6 right-6 flex flex-row items-center gap-1 bg-white/80 rounded-full shadow p-1 border border-slate-200 backdrop-blur-sm pointer-events-none">
       <Button
         variant="ghost"
         size="icon"
         onClick={() => zoomIn()}
-        className="h-8 w-8 p-0 rounded-full"
-        title="Zoom In"
+        className="h-8 w-8 p-0 rounded-full pointer-events-auto"
+        title="Zoom In (Ctrl/Cmd + = or Scroll)"
       >
         <ZoomIn size={16} />
       </Button>
@@ -77,20 +77,20 @@ const CustomControls: React.FC = () => {
         variant="ghost"
         size="icon"
         onClick={() => zoomOut()}
-        className="h-8 w-8 p-0 rounded-full"
-        title="Zoom Out"
+        className="h-8 w-8 p-0 rounded-full pointer-events-auto"
+        title="Zoom Out (Ctrl/Cmd + - or Scroll)"
       >
         <ZoomOut size={16} />
       </Button>
-      <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono bg-slate-100 border border-slate-200 text-slate-700">
+      <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono bg-slate-100 border border-slate-200 text-slate-700 pointer-events-auto">
         {Math.round(zoom * 100)}%
       </Badge>
       <Button
         variant="ghost"
         size="icon"
         onClick={() => fitView()}
-        className="h-8 w-8 p-0 rounded-full"
-        title="Fit View"
+        className="h-8 w-8 p-0 rounded-full pointer-events-auto"
+        title="Fit View (Ctrl/Cmd + 0)"
       >
         <Maximize2 size={16} />
       </Button>
@@ -98,7 +98,7 @@ const CustomControls: React.FC = () => {
         variant="ghost"
         size="icon"
         onClick={() => setViewport({ x: 0, y: 0, zoom: 1 })}
-        className="h-8 w-8 p-0 rounded-full"
+        className="h-8 w-8 p-0 rounded-full pointer-events-auto"
         title="Reset View"
       >
         <RotateCcw size={16} />
@@ -117,8 +117,8 @@ const SelectionInfo: React.FC = () => {
   }
 
   return (
-    <Panel position="top-right" className="mt-4 mr-4">
-      <Card className="px-3 py-2 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+    <Panel position="top-right" className="mt-4 mr-4 pointer-events-none">
+      <Card className="px-3 py-2 shadow-lg border-0 bg-white/90 backdrop-blur-sm pointer-events-auto">
         <div className="flex items-center gap-2">
           <MousePointer size={14} className="text-blue-600" />
           <Badge variant="outline" className="text-xs">
@@ -126,6 +126,79 @@ const SelectionInfo: React.FC = () => {
           </Badge>
         </div>
       </Card>
+    </Panel>
+  )
+}
+
+// Canvas Instructions Component
+const CanvasInstructions: React.FC = () => {
+  const [isVisible, setIsVisible] = React.useState(true)
+
+  if (!isVisible) return null
+
+  return (
+    <Panel position="top-left" className="mt-4 ml-4 pointer-events-none">
+      <Card className="px-3 py-2 shadow-lg border-0 bg-white/90 backdrop-blur-sm pointer-events-auto max-w-xs">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-slate-800 mb-1">Canvas Controls</h3>
+            <div className="text-xs text-slate-600 space-y-1">
+              <p>• <strong>Scroll:</strong> Zoom in/out</p>
+              <p>• <strong>Drag empty area:</strong> Pan canvas</p>
+              <p>• <strong>Space + drag:</strong> Pan mode</p>
+              <p>• <strong>Double-click:</strong> Zoom to fit</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsVisible(false)}
+            className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+            title="Dismiss"
+          >
+            <X size={12} />
+          </Button>
+        </div>
+      </Card>
+    </Panel>
+  )
+}
+
+// Interaction Mode Indicator
+const InteractionModeIndicator: React.FC = () => {
+  const [mode, setMode] = React.useState<'pan' | 'select'>('select')
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Space' && !event.repeat) {
+        setMode('pan')
+      }
+    }
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        setMode('select')
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
+
+  return (
+    <Panel position="bottom-left" className="mb-6 ml-4 pointer-events-none">
+      <Badge 
+        variant="secondary" 
+        className="bg-slate-100/90 backdrop-blur-sm border border-slate-200 text-slate-700 pointer-events-auto"
+      >
+        <MousePointer size={12} className="mr-1" />
+        {mode === 'pan' ? 'Pan Mode' : 'Select Mode'}
+      </Badge>
     </Panel>
   )
 }
@@ -228,6 +301,12 @@ export const WorkflowCanvas: React.FC = () => {
       if ((event.ctrlKey || event.metaKey) && event.key === '0') {
         event.preventDefault()
         // Reset zoom will be handled by React Flow
+      }
+      
+      // Space + drag to pan (handled by React Flow)
+      if (event.key === ' ') {
+        event.preventDefault()
+        // Space key for panning is handled by React Flow
       }
     }
 
@@ -417,16 +496,23 @@ export const WorkflowCanvas: React.FC = () => {
     dispatch(setSelectedEdges([]))
   }, [dispatch])
 
+  const onInit = useCallback((instance: ReactFlowInstance) => {
+    setReactFlowInstance(instance)
+  }, [])
+
   return (
-    <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
+    <div 
+      className="flex-1 h-full relative" 
+      ref={reactFlowWrapper}
+    >
       {/* Connect Nodes Button */}
       {selectedNodes.length === 2 && (
-        <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 flex justify-center">
+        <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 flex justify-center pointer-events-none">
           <Button
             onClick={handleConnectSelected}
             variant="default"
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow pointer-events-auto"
           >
             Connect Selected Nodes
           </Button>
@@ -438,7 +524,7 @@ export const WorkflowCanvas: React.FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onInit={setReactFlowInstance}
+        onInit={onInit}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodesDelete={onNodesDelete}
@@ -501,6 +587,12 @@ export const WorkflowCanvas: React.FC = () => {
         
         {/* Selection Info */}
         <SelectionInfo />
+        
+        {/* Canvas Instructions */}
+        <CanvasInstructions />
+        
+        {/* Interaction Mode Indicator */}
+        <InteractionModeIndicator />
       </ReactFlow>
       
       {/* Context Menu */}
