@@ -1,20 +1,21 @@
 'use client'
 
 import React from 'react'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from '@/store'
-import { removeNode, removeEdge, copyToClipboard } from '@/store/workflowSlice'
+import { useFlowStore } from '@/store/flowStore'
 import { NodeData, EdgeData } from '@/types/workflow'
-import { Trash2, Copy, Scissors } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Card, CardContent } from '@/components/ui/card'
+import { Copy, Trash2, Edit, Settings, Play, Square } from 'lucide-react'
 
 interface ContextMenuProps {
-  x: number
-  y: number
-  nodeId?: string
-  edgeId?: string
-  nodeData?: NodeData
-  edgeData?: EdgeData
-  onClose: () => void
+  x: number;
+  y: number;
+  nodeId?: string;
+  edgeId?: string;
+  nodeData?: NodeData;
+  edgeData?: EdgeData;
+  onClose: () => void;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -26,105 +27,165 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   edgeData,
   onClose
 }) => {
-  const dispatch = useDispatch<AppDispatch>()
+  const { deleteNode, deleteEdge } = useFlowStore(state => ({
+    deleteNode: state.deleteNode,
+    deleteEdge: state.deleteEdge
+  }))
 
   const handleDelete = () => {
     if (nodeId) {
-      if (confirm(`Are you sure you want to delete "${nodeData?.label || 'this node'}"?`)) {
-        dispatch(removeNode(nodeId))
-      }
+      deleteNode(nodeId)
     } else if (edgeId) {
-      if (confirm('Are you sure you want to delete this connection?')) {
-        dispatch(removeEdge(edgeId))
-      }
+      deleteEdge(edgeId)
     }
     onClose()
   }
 
   const handleCopy = () => {
-    if (nodeData) {
-      dispatch(copyToClipboard({
-        nodes: [nodeData],
-        edges: []
-      }))
-    }
+    // TODO: Implement copy functionality
+    console.log('Copying...', nodeData || edgeData)
     onClose()
   }
 
-  const handleCut = () => {
-    if (nodeData) {
-      dispatch(copyToClipboard({
-        nodes: [nodeData],
-        edges: []
-      }))
-      if (nodeId) {
-        dispatch(removeNode(nodeId))
-      }
-    }
+  const handleEdit = () => {
+    // TODO: Implement edit functionality
+    console.log('Editing...', nodeData || edgeData)
     onClose()
   }
 
-  const menuItems = []
-
-  if (nodeId && nodeData) {
-    menuItems.push(
-      <button
-        key="copy"
-        onClick={handleCopy}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-      >
-        <Copy size={14} />
-        Copy Node
-      </button>,
-      <button
-        key="cut"
-        onClick={handleCut}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-      >
-        <Scissors size={14} />
-        Cut Node
-      </button>,
-      <div key="divider" className="border-t border-gray-200 my-1" />,
-      <button
-        key="delete"
-        onClick={handleDelete}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-      >
-        <Trash2 size={14} />
-        Delete Node
-      </button>
-    )
-  } else if (edgeId && edgeData) {
-    menuItems.push(
-      <button
-        key="delete"
-        onClick={handleDelete}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-      >
-        <Trash2 size={14} />
-        Delete Connection
-      </button>
-    )
+  const handleSettings = () => {
+    // TODO: Implement settings functionality
+    console.log('Opening settings...', nodeData || edgeData)
+    onClose()
   }
 
-  if (menuItems.length === 0) {
-    return null
+  const handleRun = () => {
+    // TODO: Implement run functionality
+    console.log('Running...', nodeData || edgeData)
+    onClose()
+  }
+
+  const handleStop = () => {
+    // TODO: Implement stop functionality
+    console.log('Stopping...', nodeData || edgeData)
+    onClose()
   }
 
   return (
     <div
-      className="fixed z-50 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px] pointer-events-none"
-      style={{
-        left: x,
-        top: y,
-      }}
+      className="fixed z-50"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
     >
-      {menuItems.map((item, index) => 
-        React.cloneElement(item, {
-          key: index,
-          className: `${item.props.className} pointer-events-auto`
-        })
-      )}
+      <Card className="w-48 shadow-lg border border-slate-200">
+        <CardContent className="p-1">
+          <div className="flex flex-col">
+            {nodeData && (
+              <>
+                <div className="px-3 py-2 text-sm font-medium text-slate-700 border-b border-slate-100">
+                  {nodeData.label}
+                </div>
+                <div className="p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRun}
+                    className="w-full justify-start"
+                  >
+                    <Play size={14} className="mr-2" />
+                    Run
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleStop}
+                    className="w-full justify-start"
+                  >
+                    <Square size={14} className="mr-2" />
+                    Stop
+                  </Button>
+                  <Separator className="my-1" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEdit}
+                    className="w-full justify-start"
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSettings}
+                    className="w-full justify-start"
+                  >
+                    <Settings size={14} className="mr-2" />
+                    Settings
+                  </Button>
+                  <Separator className="my-1" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopy}
+                    className="w-full justify-start"
+                  >
+                    <Copy size={14} className="mr-2" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDelete}
+                    className="w-full justify-start text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {edgeData && (
+              <>
+                <div className="px-3 py-2 text-sm font-medium text-slate-700 border-b border-slate-100">
+                  Connection
+                </div>
+                <div className="p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEdit}
+                    className="w-full justify-start"
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Edit
+                  </Button>
+                  <Separator className="my-1" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopy}
+                    className="w-full justify-start"
+                  >
+                    <Copy size={14} className="mr-2" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDelete}
+                    className="w-full justify-start text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 } 

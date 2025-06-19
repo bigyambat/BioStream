@@ -8,8 +8,10 @@ import { Toolbar } from '../toolbar/Toolbar'
 
 export const MainLayout: React.FC = () => {
   const handleDragStart = useCallback((event: React.DragEvent, template: NodeTemplate) => {
-    event.dataTransfer.setData('application/reactflow', JSON.stringify(template))
+    console.log('Drag start - template:', template);
+    event.dataTransfer.setData('application/reactflow', template.type)
     event.dataTransfer.effectAllowed = 'move'
+    console.log('Drag start - dataTransfer set to:', template.type);
   }, [])
 
   return (

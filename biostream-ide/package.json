@@ -22,6 +22,7 @@
     "@reactflow/minimap": "^11.7.14",
     "@reactflow/node-resizer": "^2.2.14",
     "@reduxjs/toolkit": "^2.8.2",
+    "@xyflow/react": "^12.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.517.0",
@@ -29,7 +30,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

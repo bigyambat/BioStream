@@ -1,100 +1,85 @@
+import { 
+  Node, 
+  Edge, 
+  XYPosition,
+  OnNodesChange,
+  OnEdgesChange,
+  OnConnect
+} from '@xyflow/react';
+
 export interface Position {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
+export type NodeType = 'r-script' | 'data-source' | 'transform' | 'visualization' | 'control';
+export type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type ExecutionTarget = 'local' | 'hpc';
+
 export interface NodeData {
-  id: string
-  type: string
-  label: string
-  position: { x: number; y: number }
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cached'
-  code?: string
-  params?: Record<string, string | number | boolean>
-  executionTarget: 'local' | 'hpc'
-  error?: string
-  logs?: string[]
-  icon?: string
-  description?: string
-  resources?: {
-    cpu?: number
-    memory?: number
-    time?: string
-  }
-  width?: number
-  height?: number
+  label: string;
+  description?: string;
+  icon?: string;
+  type: NodeType;
+  status?: ExecutionStatus;
+  executionTarget?: ExecutionTarget;
+  code?: string;
+  params?: Record<string, string | number | boolean>;
+  [key: string]: unknown;
+}
+
+export interface NodeTemplate {
+  id: string;
+  type: NodeType;
+  label: string;
+  description: string;
+  icon: string;
+  category: string;
+  defaultData?: Partial<NodeData>;
+  defaultCode?: string;
+  defaultParams?: Record<string, string | number | boolean>;
 }
 
 export interface EdgeData {
-  id: string
-  source: string
-  target: string
-  sourceHandle?: string
-  targetHandle?: string
-  type: EdgeType
-  data?: Record<string, unknown>
-}
-
-export interface WorkflowProject {
-  id: string
-  name: string
-  description?: string
-  nodes: NodeData[]
-  edges: EdgeData[]
-  metadata: {
-    createdAt: string
-    updatedAt: string
-    version: string
-    author?: string
-  }
-}
-
-export interface ResourceSpec {
-  cpu?: number
-  memory?: number
-  time?: string
-  gpu?: number
-}
-
-export type NodeType = 
-  | 'r-script'
-  | 'data-source'
-  | 'transform'
-  | 'visualization'
-  | 'control'
-
-export type EdgeType = 
-  | 'data-flow'
-  | 'control-flow'
-  | 'custom-edge'
-
-export type ExecutionTarget = 
-  | 'local'
-  | 'hpc'
-
-export type ExecutionStatus = 
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cached'
-
-export interface NodeTemplate {
-  type: NodeType
-  label: string
-  description: string
-  icon: string
-  defaultCode?: string
-  defaultParams?: Record<string, unknown>
-  category: string
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  data?: Record<string, unknown>;
 }
 
 export interface ExecutionResult {
-  nodeId: string
-  status: ExecutionStatus
-  output?: unknown
-  error?: string
-  logs: string[]
-  executionTime?: number
-  resources?: ResourceSpec
-} 
+  output: string;
+  error?: string;
+  startTime: string;
+  endTime: string;
+  status: ExecutionStatus;
+}
+
+export interface WorkflowProject {
+  id: string;
+  name: string;
+  description: string;
+  nodes: Node<NodeData>[];
+  edges: Edge[];
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    version: string;
+    author: string;
+  };
+}
+
+export type RFState = {
+  nodes: Node<NodeData>[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+  addNode: (type: string, position: XYPosition) => void;
+  updateNodeData: (nodeId: string, data: Partial<NodeData>) => void;
+  deleteNode: (nodeId: string) => void;
+  deleteEdge: (edgeId: string) => void;
+}; 
