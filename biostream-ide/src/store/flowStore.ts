@@ -12,7 +12,8 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   ReactFlowInstance,
-  Viewport
+  Viewport,
+  MarkerType
 } from '@xyflow/react';
 import { NodeData, NodeType } from '@/types/workflow';
 
@@ -61,7 +62,14 @@ const initialNodes: Node<NodeData>[] = [
     },
   },
 ];
-const initialEdges: Edge[] = [];
+const initialEdges: Edge[] = [
+  { 
+    id: 'e-test-1-test-2', 
+    source: 'test-node-1', 
+    target: 'test-node-2', 
+    markerEnd: { type: MarkerType.ArrowClosed } 
+  }
+];
 
 export const useFlowStore = create<FlowState>((set, get) => {
   console.log('Initializing flowStore with initial nodes:', initialNodes);
@@ -89,13 +97,12 @@ export const useFlowStore = create<FlowState>((set, get) => {
 
     onConnect: (connection: Connection) => {
       set({
-        edges: addEdge(connection, get().edges),
+        edges: addEdge({ ...connection, markerEnd: { type: MarkerType.ArrowClosed } }, get().edges),
       });
     },
 
     addNode: (type: string, position: XYPosition) => {
-      console.log('addNode called with type:', type, 'position:', position);
-      
+      const newNodeId = `${type}-${Date.now()}`;
       const nodeData: NodeData = {
         label: type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' '),
         description: `A ${type.replace('-', ' ')} node`,
@@ -104,19 +111,42 @@ export const useFlowStore = create<FlowState>((set, get) => {
       };
 
       const newNode: Node<NodeData> = {
-        id: `${type}-${Date.now()}`,
+        id: newNodeId,
         type,
         position,
         data: nodeData,
       };
 
-      console.log('Created new node:', newNode);
+      const { nodes, edges } = get();
+      console.log('Auto-connecting. Current state:', { numNodes: nodes.length, numEdges: edges.length });
+      let newEdge: Edge | null = null;
 
-      set({
-        nodes: [...get().nodes, newNode],
-      });
+      // Auto-connect logic: find the most recent node that is a "leaf" (no outgoing connections)
+      if (nodes.length > 0) {
+        const sourceNode = [...nodes]
+          .reverse()
+          .find(node => !edges.some(edge => edge.source === node.id));
+        
+        if (sourceNode) {
+          console.log('Found leaf node to connect from:', sourceNode.id);
+          newEdge = {
+            id: `e-${sourceNode.id}-${newNode.id}`,
+            source: sourceNode.id,
+            target: newNode.id,
+            markerEnd: { type: MarkerType.ArrowClosed },
+          };
+          console.log('Creating new default edge:', newEdge);
+        } else {
+          console.log('No leaf node found. Not creating a new edge.');
+        }
+      }
+
+      set((state) => ({
+        nodes: [...state.nodes, newNode],
+        edges: newEdge ? [...state.edges, newEdge] : state.edges,
+      }));
       
-      console.log('Updated nodes in store:', get().nodes);
+      console.log('State after update:', { numNodes: get().nodes.length, numEdges: get().edges.length });
     },
 
     updateNodeData: (nodeId: string, data: Partial<NodeData>) => {

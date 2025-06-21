@@ -24,6 +24,11 @@ import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer } from 'lucide-reac
 import { useShallow } from 'zustand/react/shallow'
 import { useFlowStore, FlowState } from '@/store/flowStore'
 import nodeTypes from '@/components/nodes/NodeFactory'
+// import FloatingEdge from '@/components/edges/FloatingEdge'
+
+// const edgeTypes = {
+//   floating: FloatingEdge,
+// }
 
 // Custom Controls Component
 const CustomControls: React.FC = () => {
@@ -127,11 +132,6 @@ const WorkflowCanvas: React.FC = () => {
     onEdgesChange,
     onConnect,
     addNode,
-    updateNodeData,
-    deleteNode,
-    deleteEdge,
-    selectedNodes,
-    selectedEdges,
     setSelectedNodes,
     setSelectedEdges,
     setInstance
@@ -143,11 +143,6 @@ const WorkflowCanvas: React.FC = () => {
       onEdgesChange: state.onEdgesChange,
       onConnect: state.onConnect,
       addNode: state.addNode,
-      updateNodeData: state.updateNodeData,
-      deleteNode: state.deleteNode,
-      deleteEdge: state.deleteEdge,
-      selectedNodes: state.selectedNodes,
-      selectedEdges: state.selectedEdges,
       setSelectedNodes: state.setSelectedNodes,
       setSelectedEdges: state.setSelectedEdges,
       setInstance: state.setInstance
@@ -308,6 +303,7 @@ const WorkflowCanvas: React.FC = () => {
         zoomOnPinch={true}
         panOnScroll={true}
         panOnDrag={true}
+        nodeDragThreshold={1}
         zoomOnDoubleClick={true}
         preventScrolling={true}
         nodesDraggable={true}
