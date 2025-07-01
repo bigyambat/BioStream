@@ -5,7 +5,7 @@ import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Card } from '@/components/ui/card'
 import { NodeData } from '@/types/workflow'
 
-export const RScriptNode = memo(({ data }: NodeProps) => {
+const RScriptNode = memo(({ data }: NodeProps) => {
   const nodeData = data as NodeData;
   
   return (
@@ -53,4 +53,6 @@ export const RScriptNode = memo(({ data }: NodeProps) => {
   )
 })
 
-RScriptNode.displayName = 'RScriptNode' 
+RScriptNode.displayName = 'RScriptNode'
+
+export default RScriptNode;

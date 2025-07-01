@@ -3,6 +3,7 @@ import { NodeTemplate } from '@/types/workflow'
 export const nodeTemplates: NodeTemplate[] = [
   // Data Source Nodes
   {
+    id: 'csv-reader',
     type: 'data-source',
     label: 'CSV Reader',
     description: 'Read data from CSV file',
@@ -16,6 +17,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'excel-reader',
     type: 'data-source',
     label: 'Excel Reader',
     description: 'Read data from Excel file',
@@ -28,6 +30,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'db-query',
     type: 'data-source',
     label: 'Database Query',
     description: 'Execute SQL query on database',
@@ -42,6 +45,7 @@ export const nodeTemplates: NodeTemplate[] = [
 
   // Transform Nodes
   {
+    id: 'filter-data',
     type: 'transform',
     label: 'Filter Data',
     description: 'Filter rows based on conditions',
@@ -55,6 +59,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'select-columns',
     type: 'transform',
     label: 'Select Columns',
     description: 'Select specific columns from dataset',
@@ -66,6 +71,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'group-by',
     type: 'transform',
     label: 'Group By',
     description: 'Group data by specified columns',
@@ -79,6 +85,7 @@ export const nodeTemplates: NodeTemplate[] = [
 
   // R Script Nodes
   {
+    id: 'custom-r-script',
     type: 'r-script',
     label: 'Custom R Script',
     description: 'Execute custom R code',
@@ -91,6 +98,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'stat-analysis',
     type: 'r-script',
     label: 'Statistical Analysis',
     description: 'Perform statistical analysis',
@@ -104,6 +112,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'ml-model',
     type: 'r-script',
     label: 'Machine Learning',
     description: 'Train machine learning model',
@@ -119,6 +128,7 @@ export const nodeTemplates: NodeTemplate[] = [
 
   // Visualization Nodes
   {
+    id: 'scatter-plot',
     type: 'visualization',
     label: 'Scatter Plot',
     description: 'Create scatter plot',
@@ -133,6 +143,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'bar-chart',
     type: 'visualization',
     label: 'Bar Chart',
     description: 'Create bar chart',
@@ -146,6 +157,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'line-plot',
     type: 'visualization',
     label: 'Line Plot',
     description: 'Create line plot',
@@ -161,6 +173,7 @@ export const nodeTemplates: NodeTemplate[] = [
 
   // Control Nodes
   {
+    id: 'conditional-branch',
     type: 'control',
     label: 'Conditional Branch',
     description: 'Conditional execution based on data',
@@ -174,6 +187,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'loop',
     type: 'control',
     label: 'Loop',
     description: 'Iterate over data or conditions',
@@ -187,6 +201,7 @@ export const nodeTemplates: NodeTemplate[] = [
     }
   },
   {
+    id: 'parallel-execution',
     type: 'control',
     label: 'Parallel Execution',
     description: 'Execute tasks in parallel',

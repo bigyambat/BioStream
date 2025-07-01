@@ -149,11 +149,7 @@ const WorkflowCanvas: React.FC = () => {
     }))
   );
 
-  // Debug logging
-  console.log('WorkflowCanvas render - nodes:', nodes);
-  console.log('WorkflowCanvas render - edges:', edges);
-  console.log('WorkflowCanvas render - memoizedNodeTypes:', memoizedNodeTypes);
-  console.log('WorkflowCanvas render - nodeTypes keys:', Object.keys(memoizedNodeTypes));
+  
 
   // Drag and drop handlers
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -167,14 +163,14 @@ const WorkflowCanvas: React.FC = () => {
 
       const reactFlowInstance = useFlowStore.getState().instance;
       if (!reactFlowWrapper.current || !reactFlowInstance) {
-        console.log('onDrop - missing reactFlowWrapper or instance');
+        
         return;
       }
 
       const type = event.dataTransfer.getData('application/reactflow');
-      console.log('onDrop - received type:', type);
+      
       if (!type) {
-        console.log('onDrop - no type found in dataTransfer');
+        
         return;
       }
 
@@ -184,7 +180,7 @@ const WorkflowCanvas: React.FC = () => {
         y: event.clientY - reactFlowBounds.top,
       });
 
-      console.log('onDrop - adding node with type:', type, 'at position:', position);
+      
       addNode(type, position);
     },
     [addNode]
@@ -367,4 +363,4 @@ export const WorkflowCanvasProvider: React.FC = () => {
       <WorkflowCanvas />
     </ReactFlowProvider>
   );
-}; 
+};

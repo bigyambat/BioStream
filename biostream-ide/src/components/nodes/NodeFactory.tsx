@@ -1,7 +1,7 @@
 'use client'
 
 import BaseNode from '@/components/nodes/BaseNode'
-import { RScriptNode } from '@/components/nodes/RScriptNode'
+import RScriptNode from '@/components/nodes/RScriptNode'
 
 const nodeTypes = {
   'r-script': RScriptNode,
