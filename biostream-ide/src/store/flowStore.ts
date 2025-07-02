@@ -115,7 +115,6 @@ export const useFlowStore = create<FlowState>((set, get) => {
         type,
         position,
         data: nodeData,
-        dragHandle: '.custom-drag-handle',
       };
 
       const { nodes, edges } = get();
@@ -215,4 +214,4 @@ function getNodeIcon(type: string): string {
     default:
       return '📄';
   }
-}
+} 

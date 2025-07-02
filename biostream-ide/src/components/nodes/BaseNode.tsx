@@ -5,18 +5,13 @@ import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Card } from '@/components/ui/card'
 import { NodeData } from '@/types/workflow'
 
-import { GripVertical } from 'lucide-react'
-
 const BaseNode = memo(({ data }: NodeProps) => {
   const nodeData = data as NodeData;
   
   return (
-    <Card className="w-[200px] min-h-[80px] bg-white border shadow-sm relative group">
+    <Card className="w-[200px] min-h-[80px] bg-white border shadow-sm">
       <div className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <div className="custom-drag-handle cursor-grab absolute top-1/2 -translate-y-1/2 left-2 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            <GripVertical size={16} />
-          </div>
           <span className="text-lg">{nodeData.icon || '📄'}</span>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-medium text-slate-900 truncate">
