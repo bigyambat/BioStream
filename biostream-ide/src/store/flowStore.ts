@@ -36,6 +36,8 @@ export interface FlowState {
   setSelectedEdges: (edges: Edge[]) => void;
   setInstance: (instance: ReactFlowInstance | null) => void;
   setViewport: (viewport: Viewport) => void;
+  interactionMode: 'select' | 'pan';
+  setInteractionMode: (mode: 'select' | 'pan') => void;
 }
 
 const initialNodes: Node<NodeData>[] = [
@@ -81,24 +83,29 @@ export const useFlowStore = create<FlowState>((set, get) => {
     selectedNodes: [],
     selectedEdges: [],
     instance: null,
+    interactionMode: 'select',
+
+    setInteractionMode: (mode: 'select' | 'pan') => {
+      set({ interactionMode: mode });
+    },
 
     onNodesChange: (changes: NodeChange[]) => {
-      console.log('onNodesChange called with changes:', changes);
-      set({
-        nodes: applyNodeChanges(changes, get().nodes) as Node<NodeData>[],
+      console.log('flowStore - onNodesChange called with changes:', changes);
+      set((state) => {
+        return { nodes: applyNodeChanges(changes, state.nodes) as Node<NodeData>[] };
       });
     },
 
     onEdgesChange: (changes: EdgeChange[]) => {
-      set({
-        edges: applyEdgeChanges(changes, get().edges),
-      });
+      set((state) => ({
+        edges: applyEdgeChanges(changes, state.edges),
+      }));
     },
 
     onConnect: (connection: Connection) => {
-      set({
-        edges: addEdge({ ...connection, markerEnd: { type: MarkerType.ArrowClosed } }, get().edges),
-      });
+      set((state) => ({
+        edges: addEdge({ ...connection, markerEnd: { type: MarkerType.ArrowClosed } }, state.edges),
+      }));
     },
 
     addNode: (type: string, position: XYPosition) => {
@@ -117,61 +124,62 @@ export const useFlowStore = create<FlowState>((set, get) => {
         data: nodeData,
       };
 
-      const { nodes, edges } = get();
-      console.log('Auto-connecting. Current state:', { numNodes: nodes.length, numEdges: edges.length });
-      let newEdge: Edge | null = null;
+      set((state) => {
+        console.log('Auto-connecting. Current state:', { numNodes: state.nodes.length, numEdges: state.edges.length });
+        let newEdge: Edge | null = null;
 
-      // Auto-connect logic: find the most recent node that is a "leaf" (no outgoing connections)
-      if (nodes.length > 0) {
-        const sourceNode = [...nodes]
-          .reverse()
-          .find(node => !edges.some(edge => edge.source === node.id));
-        
-        if (sourceNode) {
-          console.log('Found leaf node to connect from:', sourceNode.id);
-          newEdge = {
-            id: `e-${sourceNode.id}-${newNode.id}`,
-            source: sourceNode.id,
-            target: newNode.id,
-            markerEnd: { type: MarkerType.ArrowClosed },
-          };
-          console.log('Creating new default edge:', newEdge);
-        } else {
-          console.log('No leaf node found. Not creating a new edge.');
+        // Auto-connect logic: find the most recent node that is a "leaf" (no outgoing connections)
+        if (state.nodes.length > 0) {
+          const sourceNode = [...state.nodes]
+            .reverse()
+            .find(node => !state.edges.some(edge => edge.source === node.id));
+          
+          if (sourceNode) {
+            console.log('Found leaf node to connect from:', sourceNode.id);
+            newEdge = {
+              id: `e-${sourceNode.id}-${newNode.id}`,
+              source: sourceNode.id,
+              target: newNode.id,
+              markerEnd: { type: MarkerType.ArrowClosed },
+            };
+            console.log('Creating new default edge:', newEdge);
+          } else {
+            console.log('No leaf node found. Not creating a new edge.');
+          }
         }
-      }
 
-      set((state) => ({
-        nodes: [...state.nodes, newNode],
-        edges: newEdge ? [...state.edges, newEdge] : state.edges,
-      }));
+        return {
+          nodes: [...state.nodes, newNode],
+          edges: newEdge ? [...state.edges, newEdge] : state.edges,
+        };
+      });
       
       console.log('State after update:', { numNodes: get().nodes.length, numEdges: get().edges.length });
     },
 
     updateNodeData: (nodeId: string, data: Partial<NodeData>) => {
-      set({
-        nodes: get().nodes.map((node) =>
+      set((state) => ({
+        nodes: state.nodes.map((node) =>
           node.id === nodeId
             ? { ...node, data: { ...node.data, ...data } }
             : node
         ),
-      });
+      }));
     },
 
     deleteNode: (nodeId: string) => {
-      set({
-        nodes: get().nodes.filter((node) => node.id !== nodeId),
-        edges: get().edges.filter(
+      set((state) => ({
+        nodes: state.nodes.filter((node) => node.id !== nodeId),
+        edges: state.edges.filter(
           (edge) => edge.source !== nodeId && edge.target !== nodeId
         ),
-      });
+      }));
     },
 
     deleteEdge: (edgeId: string) => {
-      set({
-        edges: get().edges.filter((edge) => edge.id !== edgeId),
-      });
+      set((state) => ({
+        edges: state.edges.filter((edge) => edge.id !== edgeId),
+      }));
     },
 
     setZoom: (zoom: number) => {
@@ -191,10 +199,7 @@ export const useFlowStore = create<FlowState>((set, get) => {
     },
 
     setViewport: (viewport: Viewport) => {
-      const instance = get().instance;
-      if (instance) {
-        instance.setViewport(viewport);
-      }
+      get().instance?.setViewport(viewport);
     },
   };
 });

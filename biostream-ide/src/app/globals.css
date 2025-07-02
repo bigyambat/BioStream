@@ -125,13 +125,7 @@
     pointer-events: auto !important;
   }
   
-  .react-flow__pane {
-    cursor: grab;
-  }
   
-  .react-flow__pane:active {
-    cursor: grabbing;
-  }
   
   /* Ensure canvas container doesn't interfere with scroll */
   .react-flow__container {

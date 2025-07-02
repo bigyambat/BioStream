@@ -24,6 +24,7 @@ import { ZoomIn, ZoomOut, RotateCcw, Maximize2, MousePointer } from 'lucide-reac
 import { useShallow } from 'zustand/react/shallow'
 import { useFlowStore, FlowState } from '@/store/flowStore'
 import nodeTypes from '@/components/nodes/NodeFactory'
+import { Hand } from 'lucide-react'
 // import FloatingEdge from '@/components/edges/FloatingEdge'
 
 // const edgeTypes = {
@@ -35,6 +36,8 @@ const CustomControls: React.FC = () => {
   const { zoomIn, zoomOut, fitView, setViewport, getZoom } = useReactFlow()
   const zoom = useFlowStore(state => state.zoom)
   const setZoom = useFlowStore(state => state.setZoom)
+  const interactionMode = useFlowStore(state => state.interactionMode)
+  const setInteractionMode = useFlowStore(state => state.setInteractionMode)
 
   React.useEffect(() => {
     const updateZoom = () => setZoom(getZoom())
@@ -83,6 +86,30 @@ const CustomControls: React.FC = () => {
         title="Reset View"
       >
         <RotateCcw size={16} />
+      </Button>
+      <Button
+        variant={interactionMode === 'select' ? 'default' : 'ghost'}
+        size="icon"
+        onClick={() => {
+          setInteractionMode('select');
+          console.log('Switched to Select Mode');
+        }}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Select Mode"
+      >
+        <MousePointer size={16} />
+      </Button>
+      <Button
+        variant={interactionMode === 'pan' ? 'default' : 'ghost'}
+        size="icon"
+        onClick={() => {
+          setInteractionMode('pan');
+          console.log('Switched to Pan Mode');
+        }}
+        className="h-8 w-8 p-0 rounded-full"
+        title="Pan Mode"
+      >
+        <Hand size={16} />
       </Button>
     </div>
   )
@@ -134,7 +161,8 @@ const WorkflowCanvas: React.FC = () => {
     addNode,
     setSelectedNodes,
     setSelectedEdges,
-    setInstance
+    setInstance,
+    interactionMode
   } = useFlowStore(
     useShallow((state: FlowState) => ({
       nodes: state.nodes,
@@ -145,7 +173,8 @@ const WorkflowCanvas: React.FC = () => {
       addNode: state.addNode,
       setSelectedNodes: state.setSelectedNodes,
       setSelectedEdges: state.setSelectedEdges,
-      setInstance: state.setInstance
+      setInstance: state.setInstance,
+      interactionMode: state.interactionMode
     }))
   );
 
@@ -154,6 +183,7 @@ const WorkflowCanvas: React.FC = () => {
   console.log('WorkflowCanvas render - edges:', edges);
   console.log('WorkflowCanvas render - memoizedNodeTypes:', memoizedNodeTypes);
   console.log('WorkflowCanvas render - nodeTypes keys:', Object.keys(memoizedNodeTypes));
+  console.log('Interaction Mode:', interactionMode, 'panOnDrag:', interactionMode === 'pan', 'nodesDraggable:', interactionMode === 'select');
 
   // Drag and drop handlers
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -193,6 +223,7 @@ const WorkflowCanvas: React.FC = () => {
   // Selection handlers
   const onSelectionChange = useCallback(
     ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
+      console.log('onSelectionChange - selected nodes:', nodes, 'selected edges:', edges);
       setSelectedNodes(nodes as Node<NodeData>[]);
       setSelectedEdges(edges);
     },
@@ -267,6 +298,7 @@ const WorkflowCanvas: React.FC = () => {
     }
   }, [contextMenu]);
 
+  console.log('WorkflowCanvas is rendering');
   return (
     <div ref={reactFlowWrapper} className="w-full h-full relative">
       {/* Debug info - moved to top right */}
@@ -283,33 +315,42 @@ const WorkflowCanvas: React.FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onInit={setInstance}
+        onInit={(instance) => {
+          setInstance(instance);
+          console.log('ReactFlow instance initialized:', instance);
+        }}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodesDelete={onNodesDelete}
         onEdgesDelete={onEdgesDelete}
         onNodeContextMenu={onNodeContextMenu}
         onEdgeContextMenu={onEdgeContextMenu}
-        onPaneContextMenu={onPaneContextMenu}
+        onPaneContextMenu={(event) => {
+          console.log('onPaneContextMenu fired');
+          setContextMenu(null);
+        }}
         onSelectionChange={onSelectionChange}
+        onNodeClick={(event, node) => console.log('onNodeClick fired for node:', node.id)}
+        onPaneClick={(event) => console.log('onPaneClick fired')}
         nodeTypes={memoizedNodeTypes}
         attributionPosition="bottom-left"
         className="bg-gradient-to-br from-slate-50 to-slate-100"
+        style={{ cursor: interactionMode === 'pan' ? 'grab' : 'default' }}
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Shift"
         minZoom={0.1}
         maxZoom={4}
         zoomOnScroll={true}
         zoomOnPinch={true}
-        panOnScroll={true}
-        panOnDrag={true}
-        nodeDragThreshold={1}
-        zoomOnDoubleClick={true}
+        panOnScroll={interactionMode === 'pan'}
+        panOnDrag={interactionMode === 'pan'}
+        nodeDragThreshold={5}
+        zoomOnDoubleClick={interactionMode === 'pan'}
         preventScrolling={true}
-        nodesDraggable={true}
-        nodesConnectable={true}
-        elementsSelectable={true}
-        selectNodesOnDrag={true}
+        nodesDraggable={interactionMode === 'select'}
+        nodesConnectable={interactionMode === 'select'}
+        elementsSelectable={interactionMode === 'select'}
+        selectNodesOnDrag={false}
         snapToGrid={false}
         snapGrid={[15, 15]}
       >

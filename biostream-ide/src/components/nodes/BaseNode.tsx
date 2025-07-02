@@ -5,11 +5,11 @@ import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Card } from '@/components/ui/card'
 import { NodeData } from '@/types/workflow'
 
-const BaseNode = memo(({ data }: NodeProps) => {
+const BaseNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as NodeData;
   
   return (
-    <Card className="w-[200px] min-h-[80px] bg-white border shadow-sm">
+    <Card className={`w-[200px] min-h-[80px] bg-white border shadow-sm ${selected ? 'border-blue-500 ring-2 ring-blue-500' : 'border-slate-200'}`}>
       <div className="p-3">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">{nodeData.icon || '📄'}</span>
